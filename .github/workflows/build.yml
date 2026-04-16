@@ -97,6 +97,7 @@ jobs:
           --cacheDir="$HOME/telegram-bazel-cache" \
           generateProject \
           --configurationPath=build-system/build-configuration.json \
+          --xcodeManagedCodesigning \
           --disableProvisioningProfiles
     
     - name: Build IPA
