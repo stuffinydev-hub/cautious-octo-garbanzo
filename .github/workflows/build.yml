@@ -98,20 +98,34 @@ jobs:
         bazelisk version
         BAZEL_BIN=$(which bazelisk)
         echo "BAZEL_PATH=${BAZEL_BIN}" >> $GITHUB_ENV
+        echo "USE_BAZEL_VERSION=7.4.1" >> $GITHUB_ENV
         
         # Patch Make.py to skip Bazel download and use bazelisk directly
         cat > /tmp/patch_make.py << 'PATCH_EOF'
 import sys
+import re
+
+# Read the file
 with open('build-system/Make/Make.py', 'r') as f:
     content = f.read()
+
+# Add shutil import if not present
+if 'import shutil' not in content:
+    content = content.replace('import sys', 'import sys\nimport shutil')
+
 # Replace bazel location logic to use bazelisk
-content = content.replace(
-    'bazel_path = locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)',
-    'bazel_path = shutil.which("bazelisk") or locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)'
-)
+old_line = 'bazel_path = locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)'
+new_line = 'bazel_path = shutil.which("bazelisk") or locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)'
+
+if old_line in content:
+    content = content.replace(old_line, new_line)
+    print("✅ Patched Make.py to use bazelisk")
+else:
+    print("⚠️ Could not find line to patch, continuing anyway")
+
+# Write back
 with open('build-system/Make/Make.py', 'w') as f:
     f.write(content)
-print("✅ Patched Make.py to use bazelisk")
 PATCH_EOF
         python3 /tmp/patch_make.py
         echo "Bazel setup complete"

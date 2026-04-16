@@ -1,0 +1,113 @@
+name: Build Hakogram (Simple)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build IPA
+    runs-on: macos-14
+    timeout-minutes: 120
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 1
+
+    - name: Setup Xcode
+      run: |
+        sudo xcode-select -s /Applications/Xcode_15.2.app
+        xcodebuild -version
+    
+    - name: Install Bazelisk
+      run: |
+        brew install bazelisk
+        echo "USE_BAZEL_VERSION=7.4.1" >> $GITHUB_ENV
+    
+    - name: Create Build Config
+      env:
+        API_ID: ${{ secrets.TELEGRAM_API_ID }}
+        API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+      run: |
+        mkdir -p build-system
+        cat > build-system/build-configuration.json << EOF
+        {
+          "bundle_id": "com.hakogram.ios",
+          "api_id": "${API_ID:-0}",
+          "api_hash": "${API_HASH:-0}",
+          "team_id": "NOTAREALTEAM",
+          "app_center_id": "0",
+          "is_internal_build": "false",
+          "is_appstore_build": "false",
+          "appstore_id": "0",
+          "app_specific_url_scheme": "hakogram",
+          "premium_iap_product_id": "",
+          "enable_siri": false,
+          "enable_icloud": false
+        }
+        EOF
+        cat build-system/build-configuration.json
+    
+    - name: Patch Build Script
+      run: |
+        # Заменяем locate_bazel на использование bazelisk
+        python3 << 'PYTHON_EOF'
+        import os
+        
+        # Читаем Make.py
+        with open('build-system/Make/Make.py', 'r') as f:
+            content = f.read()
+        
+        # Добавляем import shutil если нет
+        if 'import shutil' not in content:
+            content = content.replace('import sys', 'import sys\nimport shutil')
+        
+        # Заменяем строку с locate_bazel
+        old = 'bazel_path = locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)'
+        new = 'bazel_path = shutil.which("bazelisk") or locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)'
+        
+        if old in content:
+            content = content.replace(old, new)
+            print("✅ Patched Make.py successfully")
+        else:
+            print("⚠️ Pattern not found, but continuing")
+        
+        # Записываем обратно
+        with open('build-system/Make/Make.py', 'w') as f:
+            f.write(content)
+        PYTHON_EOF
+    
+    - name: Generate Xcode Project
+      run: |
+        export USE_BAZEL_VERSION=7.4.1
+        python3 build-system/Make/Make.py \
+          generateProject \
+          --configurationPath=build-system/build-configuration.json \
+          --xcodeManagedCodesigning \
+          --disableProvisioningProfiles
+    
+    - name: Build IPA
+      run: |
+        export USE_BAZEL_VERSION=7.4.1
+        python3 build-system/Make/Make.py \
+          build \
+          --configurationPath=build-system/build-configuration.json \
+          --buildNumber=${{ github.run_number }} \
+          --configuration=release_arm64
+    
+    - name: Find IPA
+      run: |
+        echo "Searching for IPA files..."
+        find . -name "*.ipa" -type f
+        ls -lh *.ipa 2>/dev/null || echo "No IPA in root"
+    
+    - name: Upload IPA
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: Hakogram-${{ github.run_number }}
+        path: "*.ipa"
+        if-no-files-found: error
+        retention-days: 30
