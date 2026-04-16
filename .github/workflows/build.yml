@@ -11,6 +11,8 @@ jobs:
   build:
     name: Build and Archive
     runs-on: macos-14
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout Repository
@@ -18,6 +20,17 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
+
+    - name: Validate Required Secrets
+      env:
+        TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+        TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      run: |
+        set -euo pipefail
+        [ -n "${TELEGRAM_API_ID}" ] || { echo "Missing secret: TELEGRAM_API_ID"; exit 1; }
+        [ -n "${TELEGRAM_API_HASH}" ] || { echo "Missing secret: TELEGRAM_API_HASH"; exit 1; }
+        [ -n "${APPLE_TEAM_ID}" ] || { echo "Missing secret: APPLE_TEAM_ID"; exit 1; }
     
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
@@ -26,6 +39,7 @@ jobs:
     
     - name: Install Dependencies
       run: |
+        set -euo pipefail
         brew install bazelisk
         brew install python@3.11
         pip3 install --upgrade pip
@@ -42,6 +56,7 @@ jobs:
     
     - name: Setup Build Configuration
       run: |
+        set -euo pipefail
         cat > build-system/build-configuration.json << EOF
         {
           "bundle_id": "com.hakogram.ios",
@@ -61,6 +76,7 @@ jobs:
     
     - name: Generate Xcode Project
       run: |
+        set -euo pipefail
         python3 build-system/Make/Make.py \
           --cacheDir="$HOME/telegram-bazel-cache" \
           generateProject \
@@ -69,13 +85,24 @@ jobs:
     
     - name: Build IPA
       run: |
+        set -euo pipefail
         python3 build-system/Make/Make.py \
           --cacheDir="$HOME/telegram-bazel-cache" \
           build \
           --configurationPath=build-system/build-configuration.json \
           --buildNumber=${{ github.run_number }} \
           --configuration=release_arm64
-      continue-on-error: true
+
+    - name: Verify IPA output exists
+      run: |
+        set -euo pipefail
+        shopt -s nullglob
+        ipas=( *.ipa )
+        if [ ${#ipas[@]} -eq 0 ]; then
+          echo "Build finished but no .ipa file was generated"
+          exit 1
+        fi
+        printf 'Found IPA files:\n%s\n' "${ipas[@]}"
     
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
