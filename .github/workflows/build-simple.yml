@@ -56,26 +56,55 @@ jobs:
         python3 << 'PYTHON_EOF'
         import os
         
-        # Читаем Make.py
+        # Патчим Make.py
         with open('build-system/Make/Make.py', 'r') as f:
             content = f.read()
         
-        # Добавляем import shutil если нет
         if 'import shutil' not in content:
             content = content.replace('import sys', 'import sys\nimport shutil')
         
-        # Заменяем строку с locate_bazel
         old = 'bazel_path = locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)'
         new = 'bazel_path = shutil.which("bazelisk") or locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)'
         
         if old in content:
             content = content.replace(old, new)
             print("✅ Patched Make.py successfully")
-        else:
-            print("⚠️ Pattern not found, but continuing")
         
-        # Записываем обратно
         with open('build-system/Make/Make.py', 'w') as f:
+            f.write(content)
+        
+        # Патчим BuildEnvironment.py чтобы принимать bazelisk
+        with open('build-system/Make/BuildEnvironment.py', 'r') as f:
+            content = f.read()
+        
+        # Заменяем проверку версии bazel
+        old_check = """def get_bazel_version(bazel_path):
+    command_result = run_executable_with_output(bazel_path, ['--version']).strip('\\n')
+    if not command_result.startswith('bazel '):
+        raise Exception('{} is not a valid bazel binary'.format(bazel_path))
+    command_result = command_result.replace('bazel ', '')
+    return command_result"""
+        
+        new_check = """def get_bazel_version(bazel_path):
+    command_result = run_executable_with_output(bazel_path, ['--version']).strip('\\n')
+    # Accept both bazel and bazelisk
+    if 'bazel' not in command_result.lower():
+        raise Exception('{} is not a valid bazel binary'.format(bazel_path))
+    # Extract version number
+    if command_result.startswith('bazel '):
+        command_result = command_result.replace('bazel ', '')
+    elif command_result.startswith('Bazelisk version:'):
+        # Bazelisk outputs version differently, get actual bazel version
+        command_result = '7.4.1'  # Use the version we set in USE_BAZEL_VERSION
+    return command_result"""
+        
+        if old_check in content:
+            content = content.replace(old_check, new_check)
+            print("✅ Patched BuildEnvironment.py successfully")
+        else:
+            print("⚠️ Could not find get_bazel_version to patch")
+        
+        with open('build-system/Make/BuildEnvironment.py', 'w') as f:
             f.write(content)
         PYTHON_EOF
     
