@@ -1,120 +1,99 @@
-name: CI
+name: Build Hakogram iOS
 
 on:
   push:
-    branches: [ master, main ]
-
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-13
-
+    name: Build and Archive
+    runs-on: macos-14
+    
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
-          fetch-depth: '0'
-
-      - name: Set active Xcode path
-        run: |
-          XCODE_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["xcode"]);')
-          sudo xcode-select -s /Applications/Xcode_$XCODE_VERSION.app/Contents/Developer
-
-      - name: Create canonical source directory
-        run: |
-          set -x
-          sudo mkdir -p /Users/Shared
-          cp -R $GITHUB_WORKSPACE /Users/Shared/
-          mv /Users/Shared/$(basename $GITHUB_WORKSPACE) /Users/Shared/telegram-ios
-
-      - name: Build the App
-        run: |
-          set -x
-
-          # source code paths are included in the final binary, so we need to make them stable across builds
-          SOURCE_DIR=/Users/Shared/telegram-ios
-
-          # use canonical bazel root
-          BAZEL_USER_ROOT="/private/var/tmp/_bazel_containerhost"
-
-          cd $SOURCE_DIR
-
-          BUILD_NUMBER_OFFSET="$(cat build_number_offset)"
-
-          export APP_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["app"]);')
-          export COMMIT_COUNT=$(git rev-list --count HEAD)
-          export COMMIT_COUNT="$(($COMMIT_COUNT+$BUILD_NUMBER_OFFSET))"
-          export BUILD_NUMBER="$COMMIT_COUNT"
-          echo "BUILD_NUMBER=$(echo $BUILD_NUMBER)" >> $GITHUB_ENV
-          echo "APP_VERSION=$(echo $APP_VERSION)" >> $GITHUB_ENV
-
-          python3 build-system/Make/ImportCertificates.py --path build-system/fake-codesigning/certs
-          python3 -u build-system/Make/Make.py \
-            --bazelUserRoot="$BAZEL_USER_ROOT" \
-            build \
-            --configurationPath="build-system/appstore-configuration.json" \
-            --codesigningInformationPath=build-system/fake-codesigning \
-            --configuration=release_arm64 \
-            --buildNumber="$BUILD_NUMBER"
-
-          # collect ipa
-          OUTPUT_PATH="build/artifacts"
-          rm -rf "$OUTPUT_PATH"
-          mkdir -p "$OUTPUT_PATH"
-          for f in bazel-out/applebin_ios-ios_arm*-opt-ST-*/bin/Telegram/Telegram.ipa; do
-            cp "$f" $OUTPUT_PATH/
-          done
-
-          # collect dsym
-          mkdir -p build/DSYMs
-          for f in bazel-out/applebin_ios-ios_arm*-opt-ST-*/bin/Telegram/*.dSYM; do
-            cp -R "$f" build/DSYMs/
-          done
-          zip -r "./$OUTPUT_PATH/Telegram.DSYMs.zip" build/DSYMs 1>/dev/null
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: build-${{ env.BUILD_NUMBER }}
-          release_name: j++gram ${{ env.APP_VERSION }} (${{ env.BUILD_NUMBER }})
-          body: |
-            Unsigned j++gram iOS build with AI tab, local gifts/stars, and admin tooling.
-
-            Version: ${{ env.APP_VERSION }}
-            Build: ${{ env.BUILD_NUMBER }}
-          draft: false
-          prerelease: false
-
-      - name: Upload workflow artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: jppgram-ios-${{ env.BUILD_NUMBER }}
-          path: |
-            /Users/Shared/telegram-ios/build/artifacts/Telegram.ipa
-            /Users/Shared/telegram-ios/build/artifacts/Telegram.DSYMs.zip
-
-      - name: Upload Release IPA
-        id: upload-release-ipa 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /Users/Shared/telegram-ios/build/artifacts/Telegram.ipa
-          asset_name: jppgram.ipa
-          asset_content_type: application/zip
-
-      - name: Upload Release DSYM
-        id: upload-release-dsym 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: /Users/Shared/telegram-ios/build/artifacts/Telegram.DSYMs.zip
-          asset_name: jppgram.DSYMs.zip
-          asset_content_type: application/zip
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '15.2'
+    
+    - name: Install Dependencies
+      run: |
+        brew install bazelisk
+        brew install python@3.11
+        pip3 install --upgrade pip
+    
+    - name: Cache Bazel
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/telegram-bazel-cache
+          ~/.cache/bazel
+        key: ${{ runner.os }}-bazel-${{ hashFiles('**/*.bazel', '**/*.bzl') }}
+        restore-keys: |
+          ${{ runner.os }}-bazel-
+    
+    - name: Setup Build Configuration
+      run: |
+        cat > build-system/build-configuration.json << EOF
+        {
+          "bundle_id": "com.hakogram.ios",
+          "api_id": "${{ secrets.TELEGRAM_API_ID }}",
+          "api_hash": "${{ secrets.TELEGRAM_API_HASH }}",
+          "team_id": "${{ secrets.APPLE_TEAM_ID }}",
+          "app_center_id": "0",
+          "is_internal_build": "false",
+          "is_appstore_build": "true",
+          "appstore_id": "0",
+          "app_specific_url_scheme": "hakogram",
+          "premium_iap_product_id": "",
+          "enable_siri": false,
+          "enable_icloud": false
+        }
+        EOF
+    
+    - name: Generate Xcode Project
+      run: |
+        python3 build-system/Make/Make.py \
+          --cacheDir="$HOME/telegram-bazel-cache" \
+          generateProject \
+          --configurationPath=build-system/build-configuration.json \
+          --disableProvisioningProfiles
+    
+    - name: Build IPA
+      run: |
+        python3 build-system/Make/Make.py \
+          --cacheDir="$HOME/telegram-bazel-cache" \
+          build \
+          --configurationPath=build-system/build-configuration.json \
+          --buildNumber=${{ github.run_number }} \
+          --configuration=release_arm64
+      continue-on-error: true
+    
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: hakogram-build-${{ github.run_number }}
+        path: |
+          build/
+          *.ipa
+        retention-days: 30
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          *.ipa
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

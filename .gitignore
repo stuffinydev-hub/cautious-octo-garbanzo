@@ -1,8 +1,5 @@
-fastlane/README.md
-fastlane/report.xml
-fastlane/test_output/*
-fastlane/fastlanematch
-build/*
+# Xcode
+build/
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -11,78 +8,96 @@ build/*
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-xcuserdata
+xcuserdata/
 *.xccheckout
-*.xcscmblueprint
 *.moved-aside
-DerivedData
+DerivedData/
 *.hmap
 *.ipa
 *.xcuserstate
-.DS_Store
-*.dSYM
-*.dSYM.zip
-*.ipa
-*/xcuserdata/*
-buck-out/*
-.buckd/*
-tools/buck
-tools/bazel
-AppBinary.xcworkspace/*
-Project.xcodeproj/*
-Watch/Watch.xcodeproj/*
-AppBundle.xcworkspace/*
 *.xcworkspace
-*.xcodeproj
-!*_Xcode.xcodeproj
-.idea
-*/.idea/*
-submodules/MtProtoKit/TON/macOS/lib/libtonlibjson.0.5.dylib
-submodules/MtProtoKit/TON/macOS/lib/libtonlibjson.dylib
-submodules/MtProtoKit/TON/macOS/lib/cmake/Tonlib/TonlibConfig.cmake
-submodules/MtProtoKit/TON/macOS/lib/cmake/Tonlib/TonlibConfigVersion.cmake
-submodules/MtProtoKit/TON/macOS/lib/cmake/Tonlib/TonlibTargets-release.cmake
-submodules/MtProtoKit/TON/macOS/lib/cmake/Tonlib/TonlibTargets.cmake
-submodules/MtProtoKit/TON/macOS/lib/fift/Asm.fif
-submodules/MtProtoKit/TON/macOS/lib/fift/Fift.fif
-submodules/MtProtoKit/TON/macOS/lib/fift/Lisp.fif
-submodules/MtProtoKit/TON/macOS/lib/fift/Lists.fif
-submodules/MtProtoKit/TON/macOS/lib/fift/Stack.fif
-submodules/MtProtoKit/TON/macOS/lib/fift/TonUtil.fif
-bazel-bin
-bazel-bin/*
-bazel-genfiles
-bazel-genfiles/*
-bazel-out
-bazel-out/*
-bazel-telegram-ios
-bazel-telegram-ios/*
-bazel-testlogs
-bazel-testlogs/*
-xcodeproj.bazelrc
-*/*.swp
-*.swp
-build-input/*
-**/*.pyc
-*.pyc
-submodules/OpusBinding/SharedHeaders/*
-submodules/FFMpegBinding/SharedHeaders/*
-submodules/OpenSSLEncryptionProvider/SharedHeaders/*
-submodules/TelegramCore/FlatSerialization/Sources/*
-buildServer.json
-.build/**
-Telegram.LSP.json
-**/.build/**
-spm-files
-xcode-files
-.bsp/**
-/.claude/
-/buildbox/*
+!default.xcworkspace
 
-# Local/private signing materials (keep fake-codesigning tracked)
-/.profiles/
-/codesigning/
-/build-system/real-codesigning/
-/build-system/local-codesigning/
-build-output/
-build-output/
+# Bazel
+bazel-*
+.bazel-cache/
+
+# Build artifacts
+*.app
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Configuration files with secrets
+build-system/build-configuration.json
+build-system/appstore-configuration.json
+build-system/appcenter-configuration.json
+
+# Provisioning profiles
+*.mobileprovision
+*.p12
+*.cer
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
