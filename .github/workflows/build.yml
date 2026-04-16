@@ -96,7 +96,24 @@ jobs:
         echo "Setting up Bazel via bazelisk..."
         export USE_BAZEL_VERSION=7.4.1
         bazelisk version
-        echo "BAZEL_PATH=$(which bazelisk)" >> $GITHUB_ENV
+        BAZEL_BIN=$(which bazelisk)
+        echo "BAZEL_PATH=${BAZEL_BIN}" >> $GITHUB_ENV
+        
+        # Patch Make.py to skip Bazel download and use bazelisk directly
+        cat > /tmp/patch_make.py << 'PATCH_EOF'
+import sys
+with open('build-system/Make/Make.py', 'r') as f:
+    content = f.read()
+# Replace bazel location logic to use bazelisk
+content = content.replace(
+    'bazel_path = locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)',
+    'bazel_path = shutil.which("bazelisk") or locate_bazel(base_path=os.getcwd(), cache_host_or_path=args.cacheHost, cache_dir=args.cacheDir)'
+)
+with open('build-system/Make/Make.py', 'w') as f:
+    f.write(content)
+print("✅ Patched Make.py to use bazelisk")
+PATCH_EOF
+        python3 /tmp/patch_make.py
         echo "Bazel setup complete"
     
     - name: Generate Xcode Project
@@ -104,7 +121,6 @@ jobs:
         set -euo pipefail
         export USE_BAZEL_VERSION=7.4.1
         python3 build-system/Make/Make.py \
-          --bazel="${BAZEL_PATH}" \
           --cacheDir="$HOME/telegram-bazel-cache" \
           generateProject \
           --configurationPath=build-system/build-configuration.json \
@@ -116,7 +132,6 @@ jobs:
         set -euo pipefail
         export USE_BAZEL_VERSION=7.4.1
         python3 build-system/Make/Make.py \
-          --bazel="${BAZEL_PATH}" \
           --cacheDir="$HOME/telegram-bazel-cache" \
           build \
           --configurationPath=build-system/build-configuration.json \
