@@ -577,7 +577,7 @@ public class ChatMessageInteractiveInstantVideoNode: ASDisplayNode {
                 context: item.context,
                 presentationData: item.presentationData,
                 edited: edited && !sentViaBot && !item.presentationData.isPreview,
-                isDeleted: item.topMessage.ghostgramIsDeleted,
+                isDeleted: item.topMessage.hakogramIsDeleted,
                 impressionCount: !item.presentationData.isPreview ? viewCount : nil,
                 dateText: dateText,
                 type: statusType,
@@ -1832,7 +1832,7 @@ public class ChatMessageInteractiveInstantVideoNode: ASDisplayNode {
             return
         }
         
-        // GHOSTGRAM: Premium check removed - local transcription is free!
+        // hakogram: Premium check removed - local transcription is free!
         
         var shouldBeginTranscription = false
         var shouldExpandNow = false

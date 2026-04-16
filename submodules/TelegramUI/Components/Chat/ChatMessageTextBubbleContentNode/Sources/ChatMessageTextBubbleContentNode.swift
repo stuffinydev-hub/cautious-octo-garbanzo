@@ -420,7 +420,7 @@ public class ChatMessageTextBubbleContentNode: ChatMessageBubbleContentNode {
                     if let updatingMedia = item.attributes.updatingMedia {
                         rawText = updatingMedia.text
                     } else {
-                        // MARK: - Ghostgram: Check for local edit first
+                        // MARK: - hakogram: Check for local edit first
                         let peerId = item.message.id.peerId.toInt64()
                         let messageId = item.message.id.id
                         if let localEdit = LocalEditManager.shared.getLocalEdit(peerId: peerId, messageId: messageId) {
@@ -725,7 +725,7 @@ public class ChatMessageTextBubbleContentNode: ChatMessageBubbleContentNode {
                         context: item.context,
                         presentationData: item.presentationData,
                         edited: edited && !item.presentationData.isPreview,
-                        isDeleted: item.topMessage.ghostgramIsDeleted,
+                        isDeleted: item.topMessage.hakogramIsDeleted,
                         impressionCount: !item.presentationData.isPreview ? viewCount : nil,
                         dateText: dateText,
                         type: statusType,

@@ -514,7 +514,7 @@ private func mapVisibility(_ visibility: ListViewItemNodeVisibility, boundsSize:
 }
 
 private func isDeletedBubbleMessage(_ message: Message) -> Bool {
-    return message.ghostgramIsDeleted
+    return message.hakogramIsDeleted
 }
 
 public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewItemNode {
@@ -2532,7 +2532,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                     context: item.context,
                     presentationData: item.presentationData,
                     edited: edited && !item.presentationData.isPreview,
-                    isDeleted: message.ghostgramIsDeleted,
+                    isDeleted: message.hakogramIsDeleted,
                     impressionCount: !item.presentationData.isPreview ? viewCount : nil,
                     dateText: dateText,
                     type: statusType,

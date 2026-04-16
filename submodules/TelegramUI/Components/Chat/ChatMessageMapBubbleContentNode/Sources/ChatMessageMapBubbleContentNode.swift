@@ -274,7 +274,7 @@ public class ChatMessageMapBubbleContentNode: ChatMessageBubbleContentNode {
                         context: item.context,
                         presentationData: item.presentationData,
                         edited: edited,
-                        isDeleted: item.topMessage.ghostgramIsDeleted,
+                        isDeleted: item.topMessage.hakogramIsDeleted,
                         impressionCount: !item.presentationData.isPreview ? viewCount : nil,
                         dateText: dateText,
                         type: statusType,

@@ -15,11 +15,11 @@ import TelegramStringFormatting
 import PeerNameColorItem
 import SGSimpleSettings
 
-private func ghostgramSettingsMenuIcon() -> UIImage? {
+private func hakogramSettingsMenuIcon() -> UIImage? {
     let bundle = Bundle.main
     let candidates: [(String, String)] = [
-        ("GhostgramIcon@2x", "png"),
-        ("GhostgramIcon@3x", "png"),
+        ("hakogramIcon@2x", "png"),
+        ("hakogramIcon@3x", "png"),
         ("GhostIcon@60x60", "png"),
         ("GhostIcon@58x58", "png")
     ]
@@ -30,7 +30,7 @@ private func ghostgramSettingsMenuIcon() -> UIImage? {
             })
         }
     }
-    return PresentationResourcesSettings.ghostgram
+    return PresentationResourcesSettings.hakogram
 }
 
 enum SettingsSection: Int, CaseIterable {
@@ -199,8 +199,8 @@ func settingsItems(showProfileId: Bool, data: PeerInfoScreenData?, context: Acco
         items[.myProfile]!.append(PeerInfoScreenDisclosureItem(id: 0, text: presentationData.strings.Settings_MyProfile, icon: PresentationResourcesSettings.myProfile, action: {
             interaction.openSettings(.profile)
         }))
-        items[.myProfile]!.append(PeerInfoScreenDisclosureItem(id: 1001, text: "Ghostgram Settings", icon: ghostgramSettingsMenuIcon(), action: {
-            interaction.openSettings(.ghostgram)
+        items[.myProfile]!.append(PeerInfoScreenDisclosureItem(id: 1001, text: "Hakogram Settings", icon: hakogramSettingsMenuIcon(), action: {
+            interaction.openSettings(.hakogram)
         }))
         
         if !settings.proxySettings.servers.isEmpty {

@@ -93,7 +93,7 @@ public struct PresentationResourcesSettings {
     public static let premiumGift = renderIcon(name: "Settings/Menu/Gift")
     public static let business = renderIcon(name: "Settings/Menu/Business", backgroundColors: [UIColor(rgb: 0xA95CE3), UIColor(rgb: 0xF16B80)])
     public static let myProfile = renderIcon(name: "Settings/Menu/Profile")
-    public static let ghostgram = renderIcon(name: "Settings/Menu/GhostgramSettings")
+    public static let hakogram = renderIcon(name: "Settings/Menu/hakogramSettings")
     public static let reactions = renderIcon(name: "Settings/Menu/Reactions")
     public static let balance = renderIcon(name: "Settings/Menu/Balance", scaleFactor: 0.97, backgroundColors: [UIColor(rgb: 0x34c759)])
     public static let affiliateProgram = renderIcon(name: "Settings/Menu/AffiliateProgram")

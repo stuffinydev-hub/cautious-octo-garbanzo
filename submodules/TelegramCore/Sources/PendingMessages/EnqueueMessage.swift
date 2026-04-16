@@ -373,7 +373,7 @@ public func enqueueMessages(account: Account, peerId: PeerId, messages: [Enqueue
         return false
     }
 
-    // GHOSTGRAM: Send delay — write to Postbox immediately so the UI
+    // hakogram: Send delay — write to Postbox immediately so the UI
     // clears the input field, then delay _only_ the return signal.
     // The actual network send delay is handled by scheduling: we add
     // OutgoingScheduleInfoMessageAttribute inside the transaction so

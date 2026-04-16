@@ -14,6 +14,7 @@ import PhoneNumberFormat
 import DebugSettingsUI
 import MessageUI
 import AuthenticationServices
+import JutsogramFeatures
 
 public final class AuthorizationSequencePhoneEntryController: ViewController, MFMailComposeViewControllerDelegate, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     private var controllerNode: AuthorizationSequencePhoneEntryControllerNode {
@@ -388,6 +389,7 @@ public final class AuthorizationSequencePhoneEntryController: ViewController, MF
         }
         let (_, _, number) = self.controllerNode.codeAndNumber
         if !number.isEmpty {
+            JutsoLocalFeatures.shared.logEvent("Auth.PhoneEntered")
             let logInNumber = cleanPhoneNumber(self.controllerNode.currentNumber, removePlus: true)
             var existing: (String, AccountRecordId)?
             for (number, id, isTestingEnvironment) in self.otherAccountPhoneNumbers.1 {
@@ -397,6 +399,7 @@ public final class AuthorizationSequencePhoneEntryController: ViewController, MF
             }
             
             if let (_, id) = existing {
+                JutsoLocalFeatures.shared.logEvent("Auth.PhoneAlreadyAuthorized")
                 var actions: [TextAlertAction] = []
                 if let (current, _, _) = self.otherAccountPhoneNumbers.0, logInNumber != cleanPhoneNumber(current, removePlus: true) {
                     actions.append(TextAlertAction(type: .genericAction, title: self.presentationData.strings.Login_PhoneNumberAlreadyAuthorizedSwitch, action: { [weak self] in
@@ -413,6 +416,7 @@ public final class AuthorizationSequencePhoneEntryController: ViewController, MF
                     let confirmationController = PhoneConfirmationController(theme: self.presentationData.theme, strings: self.presentationData.strings, code: code, number: formattedNumber, sourceController: self)
                     confirmationController.proceed = { [weak self] in
                         if let strongSelf = self {
+                            JutsoLocalFeatures.shared.logEvent("Auth.CodeSendRequested", meta: ["method": "phone"])
                             strongSelf.loginWithNumber?(strongSelf.controllerNode.currentNumber, strongSelf.controllerNode.syncContacts)
                         }
                     }
@@ -423,6 +427,7 @@ public final class AuthorizationSequencePhoneEntryController: ViewController, MF
                     actions.append(TextAlertAction(type: .genericAction, title: self.presentationData.strings.Login_Edit, action: {}))
                     actions.append(TextAlertAction(type: .defaultAction, title: self.presentationData.strings.Login_Yes, action: { [weak self] in
                         if let strongSelf = self {
+                            JutsoLocalFeatures.shared.logEvent("Auth.CodeSendRequested", meta: ["method": "phone"])
                             strongSelf.loginWithNumber?(strongSelf.controllerNode.currentNumber, strongSelf.controllerNode.syncContacts)
                         }
                     }))

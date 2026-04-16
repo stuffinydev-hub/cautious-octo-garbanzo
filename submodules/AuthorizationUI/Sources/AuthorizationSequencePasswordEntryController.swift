@@ -6,6 +6,7 @@ import TelegramPresentationData
 import PresentationDataUtils
 import ProgressNavigationButtonNode
 import AccountContext
+import JutsogramFeatures
 
 final class AuthorizationSequencePasswordEntryController: ViewController {
     private var controllerNode: AuthorizationSequencePasswordEntryControllerNode {
@@ -92,6 +93,8 @@ final class AuthorizationSequencePasswordEntryController: ViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+
+        JutsoLocalFeatures.shared.logEvent("Auth.TwoFactorPromptShown")
         
         if let navigationController = self.navigationController as? NavigationController, let layout = self.validLayout {
             addTemporaryKeyboardSnapshotView(navigationController: navigationController, layout: layout)
@@ -152,6 +155,7 @@ final class AuthorizationSequencePasswordEntryController: ViewController {
             self.hapticFeedback.error()
             self.controllerNode.animateError()
         } else {
+            JutsoLocalFeatures.shared.logEvent("Auth.TwoFactorAttempt")
             self.loginWithPassword?(self.controllerNode.currentPassword)
         }
     }

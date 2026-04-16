@@ -8,6 +8,7 @@ import TelegramPresentationData
 import PresentationDataUtils
 import ProgressNavigationButtonNode
 import AccountContext
+import JutsogramFeatures
 
 public final class AuthorizationSequenceCodeEntryController: ViewController {
     private var controllerNode: AuthorizationSequenceCodeEntryControllerNode {
@@ -261,6 +262,7 @@ public final class AuthorizationSequenceCodeEntryController: ViewController {
     }
     
     private func continueWithCode(_ code: String) {
+        JutsoLocalFeatures.shared.logEvent("Auth.CodeEntered")
         self.loginWithCode?(code)
     }
     

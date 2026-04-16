@@ -59,8 +59,8 @@ extension PeerInfoScreenNode {
                     self.controller?.present(self.context.sharedContext.makeSGUpdateIOSController(), animated: true)
                 }
             }
-        case .ghostgram:
-            push(ghostgramSettingsController(context: self.context))
+        case .hakogram:
+            push(hakogramSettingsController(context: self.context))
         case .avatar:
             self.controller?.openAvatarForEditing()
         case .edit:

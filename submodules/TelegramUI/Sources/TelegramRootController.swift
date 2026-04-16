@@ -80,6 +80,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     public var contactsController: ContactsController?
     public var callListController: CallListController?
     public var chatListController: ChatListController?
+    public var jutsoAIViewController: ViewController?
     public var accountSettingsController: PeerInfoScreen?
     
     private var permissionsDisposable: Disposable?
@@ -200,6 +201,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         let tabBarController = TabBarControllerImpl(theme: self.presentationData.theme, strings: self.presentationData.strings)
         tabBarController.navigationPresentation = .master
         let chatListController = self.context.sharedContext.makeChatListController(context: self.context, location: .chatList(groupId: .root), controlsHistoryPreload: true, hideNetworkActivityStatus: false, previewing: false, enableDebugActions: !GlobalExperimentalSettings.isAppStoreBuild)
+        let jutsoAIController = jutsoAIController(context: self.context)
         if let sharedContext = self.context.sharedContext as? SharedAccountContextImpl {
             chatListController.tabBarItem.badgeValue = sharedContext.switchingData.chatListBadge
         }
@@ -220,6 +222,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             controllers.append(callListController)
         }
         controllers.append(chatListController)
+        controllers.append(jutsoAIController)
         
         var restoreSettignsController: (ViewController & SettingsController)?
         if let sharedContext = self.context.sharedContext as? SharedAccountContextImpl {
@@ -239,12 +242,22 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         }
         accountSettingsController.parentController = self
         controllers.append(accountSettingsController)
-                
-        tabBarController.setControllers(controllers, selectedIndex: restoreSettignsController != nil ? (controllers.count - 1) : (controllers.count - 2))
+
+        let selectedIndex: Int
+        if restoreSettignsController != nil {
+            selectedIndex = max(0, controllers.count - 1)
+        } else if let chatIndex = controllers.firstIndex(where: { $0 === chatListController }) {
+            selectedIndex = chatIndex
+        } else {
+            selectedIndex = max(0, controllers.count - 1)
+        }
+
+        tabBarController.setControllers(controllers, selectedIndex: selectedIndex)
         
         self.contactsController = contactsController
         self.callListController = callListController
         self.chatListController = chatListController
+        self.jutsoAIViewController = jutsoAIController
         self.accountSettingsController = accountSettingsController
         self.rootTabController = tabBarController
         self.pushViewController(tabBarController, animated: false)
@@ -262,6 +275,9 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             controllers.append(self.callListController!)
         }
         controllers.append(self.chatListController!)
+        if let jutsoAIViewController = self.jutsoAIViewController {
+            controllers.append(jutsoAIViewController)
+        }
         controllers.append(self.accountSettingsController!)
         
         rootTabController.setControllers(controllers, selectedIndex: nil)

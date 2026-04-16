@@ -61,6 +61,7 @@ import RecaptchaEnterprise
 import NavigationBarImpl
 import ContextUI
 import ContextControllerImpl
+import JutsogramFeatures
 
 #if canImport(AppCenter)
 import AppCenter
@@ -356,6 +357,9 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         precondition(!testIsLaunched)
         testIsLaunched = true
+
+        let shouldShowStartupPopup = JutsoLocalFeatures.shared.registerLaunchAndShouldShowStartupPopup()
+        JutsoLocalFeatures.shared.logEvent("App.DidFinishLaunching")
         
         let _ = voipTokenPromise.get().start(next: { token in
             self.voipDeviceToken.set(.single(token))
@@ -735,6 +739,39 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         GlobalExperimentalSettings.enableFeed = false
         
         self.window?.makeKeyAndVisible()
+
+        if shouldShowStartupPopup || JutsoLocalFeatures.shared.isEnabled(.maintenanceMode) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self else { return }
+                guard let root = self.window?.rootViewController else { return }
+
+                if JutsoLocalFeatures.shared.isEnabled(.maintenanceMode) {
+                    let msg = JutsoLocalFeatures.shared.getMaintenanceMessage()
+                    let alert = UIAlertController(title: "Maintenance", message: msg, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                    root.present(alert, animated: true, completion: nil)
+                    return
+                }
+
+                let cfg = JutsoLocalFeatures.shared.getStartupPopup()
+                let title = cfg.title.isEmpty ? "j++gram" : cfg.title
+                let text = cfg.text.isEmpty ? "Добро пожаловать в j++gram." : cfg.text
+                let alert = UIAlertController(title: title, message: text, preferredStyle: .alert)
+                if !cfg.url.isEmpty {
+                    alert.addAction(UIAlertAction(title: "Open", style: .default, handler: { _ in
+                        var urlString = cfg.url
+                        if URL(string: urlString)?.scheme == nil {
+                            urlString = "https://\(urlString)"
+                        }
+                        if let url = URL(string: urlString) {
+                            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                        }
+                    }))
+                }
+                alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+                root.present(alert, animated: true, completion: nil)
+            }
+        }
         
         var hasActiveCalls: Signal<Bool, NoError> = .single(false)
         if CallKitIntegration.isAvailable, let callKitIntegration = CallKitIntegration.shared {

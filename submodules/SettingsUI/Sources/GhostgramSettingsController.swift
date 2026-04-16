@@ -6,24 +6,28 @@ import TelegramCore
 import TelegramPresentationData
 import ItemListUI
 import AccountContext
+import JutsogramFeatures
 
 // MARK: - Entry Definition
 
-private enum GhostgramSettingsSection: Int32 {
+private enum hakogramSettingsSection: Int32 {
     case features
 }
 
-private enum GhostgramSettingsEntry: ItemListNodeEntry {
+private enum hakogramSettingsEntry: ItemListNodeEntry {
     case deletedMessages(PresentationTheme, String, String)
     case ghostMode(PresentationTheme, String, String)
     case misc(PresentationTheme, String, String)
     case deviceSpoof(PresentationTheme, String, String)
     case voiceMorpher(PresentationTheme, String, String)
     case sendDelay(PresentationTheme, String, String)
+    case jutsoGifts(PresentationTheme, String, String)
+    case adminPanel(PresentationTheme, String, String)
+    case aboutUs(PresentationTheme, String)
     case info(PresentationTheme, String)
     
     var section: ItemListSectionId {
-        return GhostgramSettingsSection.features.rawValue
+        return hakogramSettingsSection.features.rawValue
     }
     
     var stableId: Int32 {
@@ -40,12 +44,18 @@ private enum GhostgramSettingsEntry: ItemListNodeEntry {
             return 4
         case .sendDelay:
             return 5
-        case .info:
+        case .jutsoGifts:
             return 6
+        case .adminPanel:
+            return 7
+        case .aboutUs:
+            return 8
+        case .info:
+            return 9
         }
     }
     
-    static func ==(lhs: GhostgramSettingsEntry, rhs: GhostgramSettingsEntry) -> Bool {
+    static func ==(lhs: hakogramSettingsEntry, rhs: hakogramSettingsEntry) -> Bool {
         switch lhs {
         case let .deletedMessages(lhsTheme, lhsText, lhsValue):
             if case let .deletedMessages(rhsTheme, rhsText, rhsValue) = rhs,
@@ -83,6 +93,23 @@ private enum GhostgramSettingsEntry: ItemListNodeEntry {
                 return true
             }
             return false
+        case let .jutsoGifts(lhsTheme, lhsText, lhsValue):
+            if case let .jutsoGifts(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme, lhsText == rhsText, lhsValue == rhsValue {
+                return true
+            }
+            return false
+        case let .adminPanel(lhsTheme, lhsText, lhsValue):
+            if case let .adminPanel(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme, lhsText == rhsText, lhsValue == rhsValue {
+                return true
+            }
+            return false
+        case let .aboutUs(lhsTheme, lhsText):
+            if case let .aboutUs(rhsTheme, rhsText) = rhs, lhsTheme === rhsTheme, lhsText == rhsText {
+                return true
+            }
+            return false
         case let .info(lhsTheme, lhsText):
             if case let .info(rhsTheme, rhsText) = rhs, lhsTheme === rhsTheme, lhsText == rhsText {
                 return true
@@ -91,12 +118,12 @@ private enum GhostgramSettingsEntry: ItemListNodeEntry {
         }
     }
     
-    static func <(lhs: GhostgramSettingsEntry, rhs: GhostgramSettingsEntry) -> Bool {
+    static func <(lhs: hakogramSettingsEntry, rhs: hakogramSettingsEntry) -> Bool {
         return lhs.stableId < rhs.stableId
     }
     
     func item(presentationData: ItemListPresentationData, arguments: Any) -> ListViewItem {
-        let arguments = arguments as! GhostgramSettingsControllerArguments
+        let arguments = arguments as! hakogramSettingsControllerArguments
         switch self {
         case let .deletedMessages(_, text, value):
             return ItemListDisclosureItem(
@@ -164,6 +191,39 @@ private enum GhostgramSettingsEntry: ItemListNodeEntry {
                     arguments.openSendDelay()
                 }
             )
+        case let .jutsoGifts(_, text, value):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: text,
+                label: value,
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    arguments.openJutsoGifts()
+                }
+            )
+        case let .adminPanel(_, text, value):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: text,
+                label: value,
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    arguments.openAdminPanel()
+                }
+            )
+        case let .aboutUs(_, text):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: text,
+                label: "",
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    arguments.openAboutUs()
+                }
+            )
         case let .info(_, text):
             return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
         }
@@ -172,13 +232,16 @@ private enum GhostgramSettingsEntry: ItemListNodeEntry {
 
 // MARK: - Arguments
 
-private final class GhostgramSettingsControllerArguments {
+private final class hakogramSettingsControllerArguments {
     let openDeletedMessages: () -> Void
     let openGhostMode: () -> Void
     let openMisc: () -> Void
     let openDeviceSpoof: () -> Void
     let openVoiceMorpher: () -> Void
     let openSendDelay: () -> Void
+    let openJutsoGifts: () -> Void
+    let openAdminPanel: () -> Void
+    let openAboutUs: () -> Void
     
     init(
         openDeletedMessages: @escaping () -> Void,
@@ -186,7 +249,10 @@ private final class GhostgramSettingsControllerArguments {
         openMisc: @escaping () -> Void,
         openDeviceSpoof: @escaping () -> Void,
         openVoiceMorpher: @escaping () -> Void,
-        openSendDelay: @escaping () -> Void
+        openSendDelay: @escaping () -> Void,
+        openJutsoGifts: @escaping () -> Void,
+        openAdminPanel: @escaping () -> Void,
+        openAboutUs: @escaping () -> Void
     ) {
         self.openDeletedMessages = openDeletedMessages
         self.openGhostMode = openGhostMode
@@ -194,12 +260,15 @@ private final class GhostgramSettingsControllerArguments {
         self.openDeviceSpoof = openDeviceSpoof
         self.openVoiceMorpher = openVoiceMorpher
         self.openSendDelay = openSendDelay
+        self.openJutsoGifts = openJutsoGifts
+        self.openAdminPanel = openAdminPanel
+        self.openAboutUs = openAboutUs
     }
 }
 
 // MARK: - State
 
-private struct GhostgramSettingsState: Equatable {
+private struct hakogramSettingsState: Equatable {
     var deletedMessagesEnabled: Bool
     var ghostModeEnabled: Bool
     var ghostModeActiveCount: Int
@@ -209,9 +278,12 @@ private struct GhostgramSettingsState: Equatable {
     var voiceMorpherEnabled: Bool
     var voiceMorpherPresetName: String
     var sendDelayEnabled: Bool
+    var starsBalance: Int
+    var adminUnlocked: Bool
     
-    static func current() -> GhostgramSettingsState {
-        return GhostgramSettingsState(
+    static func current() -> hakogramSettingsState {
+        let localSnapshot = JutsoLocalFeatures.shared.snapshot()
+        return hakogramSettingsState(
             deletedMessagesEnabled: AntiDeleteManager.shared.isEnabled,
             ghostModeEnabled: GhostModeManager.shared.isEnabled,
             ghostModeActiveCount: GhostModeManager.shared.activeFeatureCount,
@@ -220,18 +292,20 @@ private struct GhostgramSettingsState: Equatable {
             deviceSpoofEnabled: DeviceSpoofManager.shared.isEnabled,
             voiceMorpherEnabled: VoiceMorpherManager.shared.isEnabled,
             voiceMorpherPresetName: VoiceMorpherManager.shared.selectedPreset.name,
-            sendDelayEnabled: SendDelayManager.shared.isEnabled
+            sendDelayEnabled: SendDelayManager.shared.isEnabled,
+            starsBalance: localSnapshot.starsBalance,
+            adminUnlocked: localSnapshot.adminUnlocked
         )
     }
 }
 
 // MARK: - Entries builder
 
-private func ghostgramSettingsControllerEntries(
+private func hakogramSettingsControllerEntries(
     presentationData: PresentationData,
-    state: GhostgramSettingsState
-) -> [GhostgramSettingsEntry] {
-    var entries: [GhostgramSettingsEntry] = []
+    state: hakogramSettingsState
+) -> [hakogramSettingsEntry] {
+    var entries: [hakogramSettingsEntry] = []
     
     // Deleted Messages
     let deletedStatus = state.deletedMessagesEnabled ? "Вкл" : "Выкл"
@@ -256,22 +330,31 @@ private func ghostgramSettingsControllerEntries(
     // Send Delay
     let sendDelayStatus = state.sendDelayEnabled ? "Вкл" : "Выкл"
     entries.append(.sendDelay(presentationData.theme, "Отложка сообщений", sendDelayStatus))
+
+    // Jutso Gifts
+    entries.append(.jutsoGifts(presentationData.theme, "Jutso Gifts", "\(state.starsBalance)⭐️"))
+
+    // Admin panel
+    entries.append(.adminPanel(presentationData.theme, "Админ-панель", state.adminUnlocked ? "Открыта" : "По коду"))
+
+    // About us
+    entries.append(.aboutUs(presentationData.theme, "О нас"))
     
     // Info
-    entries.append(.info(presentationData.theme, "Функции конфиденциальности Ghostgram. Скрытые отметки о прочтении, обход исчезающих сообщений, обход защиты от пересылки и другое."))
+    entries.append(.info(presentationData.theme, "Функции Hakogram и jutsoAI в стиле Telegram: приватность, локальный AI-чат, визуальные звёзды, NFT-подарки и скрытая админ-панель владельца."))
     
     return entries
 }
 
 // MARK: - Controller
 
-public func ghostgramSettingsController(context: AccountContext) -> ViewController {
+public func hakogramSettingsController(context: AccountContext) -> ViewController {
     var pushControllerImpl: ((ViewController, Bool) -> Void)?
     
-    let stateValue = Atomic(value: GhostgramSettingsState.current())
-    let statePromise = ValuePromise(GhostgramSettingsState.current(), ignoreRepeated: true)
+    let stateValue = Atomic(value: hakogramSettingsState.current())
+    let statePromise = ValuePromise(hakogramSettingsState.current(), ignoreRepeated: true)
     
-    let arguments = GhostgramSettingsControllerArguments(
+    let arguments = hakogramSettingsControllerArguments(
         openDeletedMessages: {
             pushControllerImpl?(deletedMessagesController(context: context), true)
         },
@@ -289,6 +372,16 @@ public func ghostgramSettingsController(context: AccountContext) -> ViewControll
         },
         openSendDelay: {
             pushControllerImpl?(sendDelayController(context: context), true)
+        },
+        openJutsoGifts: {
+            pushControllerImpl?(jutsoStarsController(context: context), true)
+        },
+        openAdminPanel: {
+            pushControllerImpl?(jutsoAdminAccessController(context: context), true)
+        },
+        openAboutUs: {
+            let url = JutsoLocalFeatures.shared.getAboutLink()
+            context.sharedContext.openExternalUrl(context: context, urlContext: .generic, url: url, forceExternal: false, presentationData: context.sharedContext.currentPresentationData.with { $0 }, navigationController: nil, dismissInput: {})
         }
     )
     
@@ -297,11 +390,11 @@ public func ghostgramSettingsController(context: AccountContext) -> ViewControll
         statePromise.get()
     )
     |> map { presentationData, state -> (ItemListControllerState, (ItemListNodeState, Any)) in
-        let entries = ghostgramSettingsControllerEntries(presentationData: presentationData, state: state)
+        let entries = hakogramSettingsControllerEntries(presentationData: presentationData, state: state)
         
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
-            title: .text("Ghostgram"),
+            title: .text("j++gram"),
             leftNavigationButton: nil,
             rightNavigationButton: nil,
             backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back),
@@ -323,7 +416,7 @@ public func ghostgramSettingsController(context: AccountContext) -> ViewControll
     // Refresh state when view appears
     controller.visibleBottomContentOffsetChanged = { _ in }
     controller.didAppear = { _ in
-        let newState = GhostgramSettingsState.current()
+        let newState = hakogramSettingsState.current()
         let _ = stateValue.modify { _ in newState }
         statePromise.set(newState)
     }

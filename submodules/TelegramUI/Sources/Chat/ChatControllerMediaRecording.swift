@@ -209,7 +209,7 @@ extension ChatControllerImpl {
                         
                         var usedCorrelationId = false
                         
-                        // GHOSTGRAM: When SendDelayManager is active the message lands in
+                        // hakogram: When SendDelayManager is active the message lands in
                         // ScheduledLocal namespace, NOT in the main history. This means
                         // setupSendActionOnViewUpdate's callback would NEVER fire (it waits
                         // for the message to appear in the normal chat view), causing the
@@ -384,7 +384,7 @@ extension ChatControllerImpl {
                             let duration = data.duration
                             let waveformBuffer: Data? = data.waveform
                             
-                            // GHOSTGRAM: Check if Voice Morpher needs processing
+                            // hakogram: Check if Voice Morpher needs processing
                             let needsProcessing = VoiceMorpherManager.shared.isEnabled && VoiceMorpherManager.shared.selectedPreset != .disabled
                             
                             if needsProcessing {
@@ -799,7 +799,7 @@ extension ChatControllerImpl {
         }
     }
     
-    // MARK: - GHOSTGRAM: Voice Morpher Helper
+    // MARK: - hakogram: Voice Morpher Helper
     
     private func finishSendingVoiceMessage(
         randomId: Int64,
