@@ -90,10 +90,20 @@ jobs:
         echo "Build configuration created:"
         cat build-system/build-configuration.json
     
+    - name: Setup Bazel
+      run: |
+        set -euo pipefail
+        echo "Setting up Bazel via bazelisk..."
+        export USE_BAZEL_VERSION=7.4.1
+        bazelisk version
+        echo "Bazel setup complete"
+    
     - name: Generate Xcode Project
       run: |
         set -euo pipefail
+        export USE_BAZEL_VERSION=7.4.1
         python3 build-system/Make/Make.py \
+          --bazelUserPath="$(which bazelisk)" \
           --cacheDir="$HOME/telegram-bazel-cache" \
           generateProject \
           --configurationPath=build-system/build-configuration.json \
@@ -103,7 +113,9 @@ jobs:
     - name: Build IPA
       run: |
         set -euo pipefail
+        export USE_BAZEL_VERSION=7.4.1
         python3 build-system/Make/Make.py \
+          --bazelUserPath="$(which bazelisk)" \
           --cacheDir="$HOME/telegram-bazel-cache" \
           build \
           --configurationPath=build-system/build-configuration.json \
