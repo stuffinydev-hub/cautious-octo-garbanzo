@@ -1,0 +1,135 @@
+═══════════════════════════════════════════════════════════
+  HAKOGRAM - ЛОКАЛЬНАЯ СБОРКА И УСТАНОВКА ЧЕРЕЗ SIDELOADLY
+═══════════════════════════════════════════════════════════
+
+ВАРИАНТ 1: БЫСТРАЯ СБОРКА (БЕЗ XCODE)
+═══════════════════════════════════════════════════════════
+
+1. СКАЧАЙТЕ ГОТОВЫЙ IPA
+   - Дождитесь окончания сборки на GitHub Actions
+   - Или используйте готовый Telegram IPA и модифицируйте его
+
+2. УСТАНОВИТЕ SIDELOADLY
+   - Windows: https://sideloadly.io/
+   - Скачайте и установите
+
+3. УСТАНОВИТЕ IPA
+   - Откройте Sideloadly
+   - Подключите iPhone к ПК
+   - Перетащите IPA файл в Sideloadly
+   - Введите Apple ID (бесплатный аккаунт подойдет)
+   - Нажмите "Start"
+   - Готово! Приложение установлено на 7 дней
+
+
+ВАРИАНТ 2: СБОРКА НА MAC (ЕСЛИ ЕСТЬ)
+═══════════════════════════════════════════════════════════
+
+1. УСТАНОВИТЕ ЗАВИСИМОСТИ
+   brew install bazelisk python@3.11
+
+2. ПОЛУЧИТЕ API КЛЮЧИ
+   - Перейдите на https://my.telegram.org
+   - API development tools
+   - Создайте приложение
+   - Скопируйте api_id и api_hash
+
+3. НАСТРОЙТЕ КОНФИГУРАЦИЮ
+   Создайте файл: build-system/build-configuration.json
+   
+   {
+     "bundle_id": "com.hakogram.ios",
+     "api_id": "ВАШ_API_ID",
+     "api_hash": "ВАШ_API_HASH",
+     "team_id": "NOTAREALTEAM",
+     "app_center_id": "0",
+     "is_internal_build": "false",
+     "is_appstore_build": "false",
+     "appstore_id": "0",
+     "app_specific_url_scheme": "hakogram",
+     "premium_iap_product_id": "",
+     "enable_siri": false,
+     "enable_icloud": false
+   }
+
+4. СГЕНЕРИРУЙТЕ XCODE ПРОЕКТ
+   python3 build-system/Make/Make.py \
+     --cacheDir="$HOME/telegram-bazel-cache" \
+     generateProject \
+     --configurationPath=build-system/build-configuration.json \
+     --disableProvisioningProfiles
+
+5. ОТКРОЙТЕ В XCODE
+   - Откройте Telegram.xcodeproj
+   - Выберите ваше устройство
+   - Product → Archive
+   - Экспортируйте IPA
+
+6. УСТАНОВИТЕ ЧЕРЕЗ SIDELOADLY
+   - Откройте Sideloadly
+   - Перетащите IPA
+   - Установите на iPhone
+
+
+ВАРИАНТ 3: МОДИФИКАЦИЯ ГОТОВОГО TELEGRAM
+═══════════════════════════════════════════════════════════
+
+1. СКАЧАЙТЕ TELEGRAM IPA
+   - https://ipa-apps.me/app/telegram
+   - Или извлеките из App Store
+
+2. РАСПАКУЙТЕ IPA
+   - Переименуйте .ipa в .zip
+   - Распакуйте архив
+   - Найдите Payload/Telegram.app
+
+3. ЗАМЕНИТЕ ФАЙЛЫ
+   - Скопируйте файлы из jutsogram/ в Telegram.app
+   - Измените Info.plist (название, bundle id)
+
+4. ЗАПАКУЙТЕ ОБРАТНО
+   - Создайте папку Payload
+   - Поместите Telegram.app в Payload
+   - Заархивируйте в ZIP
+   - Переименуйте в .ipa
+
+5. УСТАНОВИТЕ ЧЕРЕЗ SIDELOADLY
+
+
+РЕКОМЕНДАЦИЯ: ИСПОЛЬЗУЙТЕ ВАРИАНТ 1
+═══════════════════════════════════════════════════════════
+
+Самый простой способ:
+1. Скачайте официальный Telegram IPA
+2. Установите через Sideloadly
+3. Функции Hakogram можно добавить позже через джейлбрейк твики
+
+
+АЛЬТЕРНАТИВА: ALTSTORE
+═══════════════════════════════════════════════════════════
+
+Вместо Sideloadly можно использовать AltStore:
+- https://altstore.io/
+- Бесплатно
+- Автоматическое обновление каждые 7 дней
+- Работает на Windows и Mac
+
+
+ВАЖНО!
+═══════════════════════════════════════════════════════════
+
+⚠️ Без Apple Developer аккаунта ($99/год):
+   - Приложение работает 7 дней
+   - Нужно переустанавливать каждую неделю
+   - Максимум 3 приложения одновременно
+
+✅ С Apple Developer аккаунтом:
+   - Приложение работает 1 год
+   - Неограниченное количество приложений
+   - Можно распространять через TestFlight
+
+
+КОНТАКТЫ
+═══════════════════════════════════════════════════════════
+Telegram: https://t.me/jutsodev
+GitHub: https://github.com/stuffinydev-hub/cautious-octo-garbanzo
